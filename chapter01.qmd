@@ -1,0 +1,136 @@
+---
+title: "Exercises chapter 1"
+warning: false
+echo: true
+render: html
+---
+## Exercise 1.1 Practice using the pnorm() function–Part 1
+
+Given a normal distribution with mean 500 and standard deviation 100, use the `pnorm` function to calculate the probability of obtaining values between 200 and 800 from this distribution.
+
+```{r}
+pnorm(800, mean = 500, sd = 100) - pnorm(200, mean = 500, sd = 100) 
+1-2*pnorm(200, mean = 500, sd = 100)
+```
+
+
+## Exercise 1.2 Practice using the `pnorm()` function–Part 2
+
+
+
+Calculate the following probabilities. Given a normal distribution with mean 800 and standard deviation 150, what is the probability of obtaining:
+
+a score of 700 or less
+a score of 900 or more
+a score of 800 or more
+
+```{r}
+c(pnorm(700, 800, 150), pnorm(900, 800, 150, lower.tail = FALSE), 1-pnorm(800, 800, 150))
+```
+
+## Exercise 1.3 Practice using the `pnorm()` function–Part 3
+
+Given a normal distribution with mean 600 and standard deviation 200, what is the probability of obtaining:
+
+a score of 550 or less.
+a score between 300 and 800.
+a score of 900 or more.
+
+```{r}
+c(pnorm(550, 600, 150), pnorm(800, 600, 150)-pnorm(300, 600, 150), 1-pnorm(900, 600, 150))
+```
+
+
+## Exercise 1.4 Practice using the `qnorm()` function–Part1
+
+Consider a normal distribution with mean 1 and standard deviation 1. Compute the lower and upper boundaries such that:
+
+the area (the probability) to the left of the lower boundary is 0.10.
+the area (the probability) to the right of the upper boundary is 0.90.
+
+```{r}
+c(qnorm(.1, 1, 1), qnorm(.9, 1, 1, lower.tail = FALSE))
+```
+
+
+## Exercise 1.5 Practice using the `qnorm()` function–Part2
+
+Given a normal distribution with mean 650 and standard deviation 125. There exist two quantiles, the lower quantile q1 and the upper quantile q2, that are equidistant from the mean 650, such that the area under the curve of the normal between q1 and q2 is 80%. Find q1 and q2.
+
+```{r}
+x <- c(qnorm(.1, 650, 125), qnorm(.1, 650, 125, lower.tail = FALSE)) 
+pnorm(x[2], 650, 125) - pnorm(x[1], 650, 125) 
+```
+
+
+## Exercise 1.6 Practice getting summaries from samples–Part 1
+
+Given data that is generated as follows:
+
+```{r}
+data_gen1 <- rnorm(1000, 300, 200)
+```
+
+Calculate the mean, variance, and the lower quantile q1 and the upper quantile q2, that are equidistant and such that the range of probability between them is 80%.
+
+
+```{r}
+c(mean=mean(data_gen1), var=var(data_gen1), quantile(data_gen1, c(.1, .9)))
+```
+
+
+
+## Exercise 1.7 Practice getting summaries from samples–Part 2.
+
+This time we generate the data with a truncated normal distribution from the package `extraDistr`. The details of this distribution will be discussed later in section 4.1 and in the Box 4.1, but for now we can treat it as an unknown generative process:
+
+```{r}
+library(extraDistr)
+data_gen1 <- rtnorm(1000, 300, 200, a = 0)
+```
+
+Using the sample data, calculate the mean, variance, and the lower quantile q1 and the upper quantile q2, such that the probability of observing values between these two quantiles is 80%.
+
+
+```{r}
+c(mean=mean(data_gen1), var=var(data_gen1), quantile(data_gen1, c(.1, .9)))
+```
+
+
+## Exercise 1.8 Practice with a variance-covariance matrix for a bivariate distribution.
+
+Suppose that you have a bivariate distribution where one of the two random variables comes from a normal distribution with mean $μ_X=600$ and standard deviation $σ_X=100$, and the other from a normal distribution with mean $μ_Y=400$ and standard deviation  $σ_Y=50$. The correlation  $ρ_{XY}$  between the two random variables is 0.4.
+Write down the variance-covariance matrix of this bivariate distribution as a matrix (with numerical values, not mathematical symbols), and then use it to generate 100 pairs of simulated data points. Plot the simulated data such that the relationship between the random variables $X$ and $Y$ is clear. Generate two sets of new data ($100$ pairs of data points each) with correlation $-0.4$ and $0$, and plot these alongside the plot for the data with correlation $0.4$.
+
+```{r}
+#| echo: false
+
+library(mvtnorm)
+library(tidyverse)
+library(ggplot2)
+library(viridis)
+
+mu_x <- 600
+sigma_x <- 100
+mu_y <- 400
+sigma_y <- 50
+rho_x_y <- c(-.4, 0, .4)
+N <- 100
+
+df <- expand.grid(
+  x=mu_x+seq(-2*sigma_x, 2*sigma_x, length.out=N),
+  y=mu_y+seq(-2*sigma_y, 2*sigma_y, length.out=N),
+  rho=rho_x_y
+) |> rowwise() |> mutate(pmf = dmvnorm(c(x,y), c(mu_x, mu_y), matrix(c(sigma_x^2, rho*sigma_x*sigma_y,rho*sigma_x*sigma_y, sigma_y^2), ncol=2 )))
+  
+df |> ggplot(aes(x=y, y=x)) +
+  facet_wrap(~rho, labeller=labeller(rho=function(value) paste0("ρ = ", value))) +
+  geom_raster(aes(fill = pmf)) +
+  scale_fill_gradientn(colours = terrain.colors(10)) +
+  theme_classic() +
+  coord_fixed() +
+  theme(
+    legend.position = "none",
+    strip.background = element_blank()
+  )
+```

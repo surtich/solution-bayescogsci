@@ -1,0 +1,3 @@
+# Preface {.unnumbered}
+
+Exercise solutions of [An Introduction to Bayesian Data Analysis for Cognitive Science Book](https://vasishth.github.io/bayescogsci/book/).

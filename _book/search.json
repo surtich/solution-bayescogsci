@@ -1,0 +1,152 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "bayescogsci exercises",
+    "section": "",
+    "text": "Preface\nExercise solutions of An Introduction to Bayesian Data Analysis for Cognitive Science Book.",
+    "crumbs": [
+      "Preface"
+    ]
+  },
+  {
+    "objectID": "chapter01.html#exercise-1.1-practice-using-the-pnorm-functionpart-1",
+    "href": "chapter01.html#exercise-1.1-practice-using-the-pnorm-functionpart-1",
+    "title": "Exercises chapter 1",
+    "section": "Exercise 1.1 Practice using the pnorm() function–Part 1",
+    "text": "Exercise 1.1 Practice using the pnorm() function–Part 1\nGiven a normal distribution with mean 500 and standard deviation 100, use the pnorm function to calculate the probability of obtaining values between 200 and 800 from this distribution.\n\npnorm(800, mean = 500, sd = 100) - pnorm(200, mean = 500, sd = 100) \n\n[1] 0.9973002\n\n1-2*pnorm(200, mean = 500, sd = 100)\n\n[1] 0.9973002",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Exercises chapter 1</span>"
+    ]
+  },
+  {
+    "objectID": "chapter01.html#exercise-1.2-practice-using-the-pnorm-functionpart-2",
+    "href": "chapter01.html#exercise-1.2-practice-using-the-pnorm-functionpart-2",
+    "title": "Exercises chapter 1",
+    "section": "Exercise 1.2 Practice using the pnorm() function–Part 2",
+    "text": "Exercise 1.2 Practice using the pnorm() function–Part 2\nCalculate the following probabilities. Given a normal distribution with mean 800 and standard deviation 150, what is the probability of obtaining:\na score of 700 or less a score of 900 or more a score of 800 or more\n\nc(pnorm(700, 800, 150), pnorm(900, 800, 150, lower.tail = FALSE), 1-pnorm(800, 800, 150))\n\n[1] 0.2524925 0.2524925 0.5000000",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Exercises chapter 1</span>"
+    ]
+  },
+  {
+    "objectID": "chapter01.html#exercise-1.3-practice-using-the-pnorm-functionpart-3",
+    "href": "chapter01.html#exercise-1.3-practice-using-the-pnorm-functionpart-3",
+    "title": "Exercises chapter 1",
+    "section": "Exercise 1.3 Practice using the pnorm() function–Part 3",
+    "text": "Exercise 1.3 Practice using the pnorm() function–Part 3\nGiven a normal distribution with mean 600 and standard deviation 200, what is the probability of obtaining:\na score of 550 or less. a score between 300 and 800. a score of 900 or more.\n\nc(pnorm(550, 600, 150), pnorm(800, 600, 150)-pnorm(300, 600, 150), 1-pnorm(900, 600, 150))\n\n[1] 0.36944134 0.88603865 0.02275013",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Exercises chapter 1</span>"
+    ]
+  },
+  {
+    "objectID": "chapter01.html#exercise-1.4-practice-using-the-qnorm-functionpart1",
+    "href": "chapter01.html#exercise-1.4-practice-using-the-qnorm-functionpart1",
+    "title": "Exercises chapter 1",
+    "section": "Exercise 1.4 Practice using the qnorm() function–Part1",
+    "text": "Exercise 1.4 Practice using the qnorm() function–Part1\nConsider a normal distribution with mean 1 and standard deviation 1. Compute the lower and upper boundaries such that:\nthe area (the probability) to the left of the lower boundary is 0.10. the area (the probability) to the right of the upper boundary is 0.90.\n\nc(qnorm(.1, 1, 1), qnorm(.9, 1, 1, lower.tail = FALSE))\n\n[1] -0.2815516 -0.2815516",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Exercises chapter 1</span>"
+    ]
+  },
+  {
+    "objectID": "chapter01.html#exercise-1.5-practice-using-the-qnorm-functionpart2",
+    "href": "chapter01.html#exercise-1.5-practice-using-the-qnorm-functionpart2",
+    "title": "Exercises chapter 1",
+    "section": "Exercise 1.5 Practice using the qnorm() function–Part2",
+    "text": "Exercise 1.5 Practice using the qnorm() function–Part2\nGiven a normal distribution with mean 650 and standard deviation 125. There exist two quantiles, the lower quantile q1 and the upper quantile q2, that are equidistant from the mean 650, such that the area under the curve of the normal between q1 and q2 is 80%. Find q1 and q2.\n\nx &lt;- c(qnorm(.1, 650, 125), qnorm(.1, 650, 125, lower.tail = FALSE)) \npnorm(x[2], 650, 125) - pnorm(x[1], 650, 125) \n\n[1] 0.8",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Exercises chapter 1</span>"
+    ]
+  },
+  {
+    "objectID": "chapter01.html#exercise-1.6-practice-getting-summaries-from-samplespart-1",
+    "href": "chapter01.html#exercise-1.6-practice-getting-summaries-from-samplespart-1",
+    "title": "Exercises chapter 1",
+    "section": "Exercise 1.6 Practice getting summaries from samples–Part 1",
+    "text": "Exercise 1.6 Practice getting summaries from samples–Part 1\nGiven data that is generated as follows:\n\ndata_gen1 &lt;- rnorm(1000, 300, 200)\n\nCalculate the mean, variance, and the lower quantile q1 and the upper quantile q2, that are equidistant and such that the range of probability between them is 80%.\n\nc(mean=mean(data_gen1), var=var(data_gen1), quantile(data_gen1, c(.1, .9)))\n\n       mean         var         10%         90% \n  303.41574 39580.06168    55.96058   564.45573",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Exercises chapter 1</span>"
+    ]
+  },
+  {
+    "objectID": "chapter01.html#exercise-1.7-practice-getting-summaries-from-samplespart-2.",
+    "href": "chapter01.html#exercise-1.7-practice-getting-summaries-from-samplespart-2.",
+    "title": "Exercises chapter 1",
+    "section": "Exercise 1.7 Practice getting summaries from samples–Part 2.",
+    "text": "Exercise 1.7 Practice getting summaries from samples–Part 2.\nThis time we generate the data with a truncated normal distribution from the package extraDistr. The details of this distribution will be discussed later in section 4.1 and in the Box 4.1, but for now we can treat it as an unknown generative process:\n\nlibrary(extraDistr)\ndata_gen1 &lt;- rtnorm(1000, 300, 200, a = 0)\n\nUsing the sample data, calculate the mean, variance, and the lower quantile q1 and the upper quantile q2, such that the probability of observing values between these two quantiles is 80%.\n\nc(mean=mean(data_gen1), var=var(data_gen1), quantile(data_gen1, c(.1, .9)))\n\n       mean         var         10%         90% \n  329.80532 32283.56473    95.38455   571.38644",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Exercises chapter 1</span>"
+    ]
+  },
+  {
+    "objectID": "chapter01.html#exercise-1.8-practice-with-a-variance-covariance-matrix-for-a-bivariate-distribution.",
+    "href": "chapter01.html#exercise-1.8-practice-with-a-variance-covariance-matrix-for-a-bivariate-distribution.",
+    "title": "Exercises chapter 1",
+    "section": "Exercise 1.8 Practice with a variance-covariance matrix for a bivariate distribution.",
+    "text": "Exercise 1.8 Practice with a variance-covariance matrix for a bivariate distribution.\nSuppose that you have a bivariate distribution where one of the two random variables comes from a normal distribution with mean \\(μ_X=600\\) and standard deviation \\(σ_X=100\\), and the other from a normal distribution with mean \\(μ_Y=400\\) and standard deviation \\(σ_Y=50\\). The correlation \\(ρ_{XY}\\) between the two random variables is 0.4. Write down the variance-covariance matrix of this bivariate distribution as a matrix (with numerical values, not mathematical symbols), and then use it to generate 100 pairs of simulated data points. Plot the simulated data such that the relationship between the random variables \\(X\\) and \\(Y\\) is clear. Generate two sets of new data (\\(100\\) pairs of data points each) with correlation \\(-0.4\\) and \\(0\\), and plot these alongside the plot for the data with correlation \\(0.4\\).",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Exercises chapter 1</span>"
+    ]
+  },
+  {
+    "objectID": "chapter02.html#exercise-2.1-deriving-bayes-rule",
+    "href": "chapter02.html#exercise-2.1-deriving-bayes-rule",
+    "title": "Exercises chapter 2",
+    "section": "Exercise 2.1 Deriving Bayes’ rule",
+    "text": "Exercise 2.1 Deriving Bayes’ rule\nLet \\(A\\) and \\(B\\) be two observable events. \\(P(A)\\) is the probability that \\(A\\) occurs, and \\(P(B)\\) is the probability that\n\\(B\\) occurs. \\(P(A|B)\\) is the conditional probability that \\(A\\) occurs given that \\(B\\) has happened. \\(P(A,B)\\) is the joint probability of \\(A\\) and \\(B\\) both occurring.\nYou are given the definition of conditional probability:\n\\[\n\\begin{equation}\nP(A|B)= \\frac{P(A,B)}{P(B)} \\hbox{ where } P(B)&gt;0\n\\end{equation}\n\\]\nUsing the above definition, and using the fact that \\(P(A,B)=P(B,A)\\) (i.e., the probability of\n\\(A\\) and \\(B\\) both occurring is the same as the probability of \\(B\\) and \\(A\\) both occurring), derive an expression for\n\\(P(B|A)\\). Show the steps clearly in the derivation.\n\n\\[\n\\begin{aligned}\nP(B|A) &= \\frac{P(B,A)}{P(A)} \\hbox{ where } P(A)&gt;0 \\\\\n       &= \\frac{P(A|B)P(B)}{P(A)}\n\\end{aligned}\n\\]",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Exercises chapter 2</span>"
+    ]
+  },
+  {
+    "objectID": "chapter02.html#exercise-2.2-conjugate-forms-1",
+    "href": "chapter02.html#exercise-2.2-conjugate-forms-1",
+    "title": "Exercises chapter 2",
+    "section": "Exercise 2.2 Conjugate forms 1",
+    "text": "Exercise 2.2 Conjugate forms 1\n\nComputing the general form of a PDF for a posterior\nSuppose you are given data \\(k\\) consisting of the number of successes, coming from a \\(\\text{Binomial}(n,θ)\\) distribution. Given \\(k\\) successes in \\(n\\) trials coming from a binomial distribution, we define a \\(\\text{Beta}(a,b)\\) prior on the parameter \\(θ\\). Write down the Beta distribution that represents the posterior, in terms of \\(a\\), \\(b\\), \\(n\\), and \\(k\\).\n\n\\[\n\\begin{aligned}\np(\\theta | n,k) &\\propto p(k |n,\\theta) p(\\theta) \\\\\n\\text{Beta}(a+k, b+n-k) &= \\text{Binomial}(k|n,θ)\\times\\text{Beta}(\\theta|a,b)\n\\end{aligned}\n\\]\n\n\n\nPractical application\nWe ask 10 yes/no questions from a subject, and the subject returns 0 correct answers. We assume a binomial likelihood function for these data. Also assume a \\(Beta(1,1)\\) prior on the parameter \\(θ\\), which represents the probability of success. Use the result you derived above to write down the posterior distribution of the \\(θ\\) parameter.\n\n\\[\n\\text{Beta}(1+0, 1+10-0) = \\text{Beta}(1, 11)\n\\]",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Exercises chapter 2</span>"
+    ]
+  },
+  {
+    "objectID": "chapter02.html#exercise-2.3-conjugate-forms-2",
+    "href": "chapter02.html#exercise-2.3-conjugate-forms-2",
+    "title": "Exercises chapter 2",
+    "section": "Exercise 2.3 Conjugate forms 2",
+    "text": "Exercise 2.3 Conjugate forms 2\nSuppose that we perform \\(n\\) independent trials until we get a success (e.g., a heads in a coin toss). For coin tosses, the possible outcomes could be, H, T. The probability of success in each trial is \\(θ\\). Then, the Geometric random variable, call it \\(X\\), gives us the probability of getting a success in\n\\(n\\) trials as follows:\n\\[\n\\begin{equation}\nProb(X=n)=\\theta(1-\\theta)^{ n-1}\\text{, where } n =1,2,...\n\\end{equation}\n\\] Let the prior on \\(θ\\) be \\(Beta(a,b)\\), a beta distribution with parameters \\(a\\),\\(b\\). The posterior distribution is a beta distribution with parameters \\(a^*\\) and \\(b^*\\). Determine these parameters in terms of \\(a\\), \\(b\\), and \\(n\\).\n\n\\[\n\\begin{aligned}\np(\\theta | n) &\\propto p(n |\\theta) p(\\theta) \\\\\np(\\theta | n) &\\propto \\theta(1-\\theta)^{ n-1}\\theta^{a-1}(1-\\theta)^{b-1} \\propto \\theta^a(1-\\theta)^{b+n-2} \\\\\np(\\theta | n) &= Beta(a^*,b^*) = Beta(a+1,b+n-1)\n\\end{aligned}\n\\]",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Exercises chapter 2</span>"
+    ]
+  },
+  {
+    "objectID": "chapter02.html#exercise-2.4-conjugate-forms-3",
+    "href": "chapter02.html#exercise-2.4-conjugate-forms-3",
+    "title": "Exercises chapter 2",
+    "section": "Exercise 2.4 Conjugate forms 3",
+    "text": "Exercise 2.4 Conjugate forms 3\nThe Gamma distribution is defined in terms of the parameters a, b: Ga(a,b). If there is a random variable \\(Y\\) (where \\(y \\gt 0\\)) that has a Gamma distribution as a PDF (\\(Y\\sim \\text{Gamma}(a,b)\\)), then:\n\\[\n\\begin{equation}\nGa(y | a,b)=\\frac{b^a y^{a-1} \\exp\\{-by\\}}{\\Gamma(a)}\n\\end{equation}\n\\]\nSuppose that we have \\(n\\) data points, \\(x_1,…,x_n\\), that are drawn from an exponentially distributed. The exponential likelihood function is:\n\\[\n\\begin{equation}\np(x_1,\\dots,x_n | \\lambda)=\\lambda^n \\exp \\{-\\lambda \\sum_{i=1}^n x_i \\}\n\\end{equation}\n\\]\nIt turns out that if we assume a Ga(a,b) prior distribution for \\(λ\\) and the above Exponential likelihood, the posterior distribution of \\(λ\\) is a Gamma distribution. In other words, the Gamma(a,b) prior on the \\(λ\\) parameter in the Exponential distribution will be written:\n\\[\n\\begin{equation}\nGa(\\lambda | a,b)=\\frac{b^a \\lambda^{a-1} \\exp\\{-b\\lambda\\}}{\\Gamma(a)}\n\\end{equation}\n\\]\nFind the parameters \\(a^′\\) and \\(b^′\\) of the posterior distribution.\n\n\\[\n\\begin{aligned}\np(\\lambda | X) &\\propto p(X |\\lambda) p(\\lambda) \\\\\np(\\lambda | X) &\\propto \\lambda^n \\exp \\left\\{-\\lambda \\sum_{i=1}^n x_i  \\right\\}\\lambda^{a-1} \\exp\\{-b\\lambda\\} \\propto \\lambda^{a+n-1} \\exp \\left\\{-\\lambda \\left(\\sum_{i=1}^n x_i + b\\right)\\right\\}\\\\\np(\\lambda | X) &= Ga(a^′,b^′) = Ga\\left(a+n,b+\\sum_{i=1}^n x_i \\right)\n\\end{aligned}\n\\]",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Exercises chapter 2</span>"
+    ]
+  },
+  {
+    "objectID": "chapter02.html#exercise-2.5-conjugate-forms-4",
+    "href": "chapter02.html#exercise-2.5-conjugate-forms-4",
+    "title": "Exercises chapter 2",
+    "section": "Exercise 2.5 Conjugate forms 4",
+    "text": "Exercise 2.5 Conjugate forms 4\n\nComputing the posterior\nThis is a contrived example. Suppose we are modeling the number of times that a speaker says the word “I” per day. This could be of interest if we are studying, for example, how self-oriented a speaker is. The number of times\n\\(x\\) that the word is uttered in over a particular time period (here, one day) can be modeled by a Poisson distribution (\\(x=0,1,2,…\\)):\n\\[\n\\begin{equation}\nf(x\\mid \\theta) = \\frac{\\exp(-\\theta) \\theta^x}{x!}\n\\end{equation}\n\\]\nwhere the rate \\(θ\\) is unknown, and the numbers of utterances of the target word on each day are independent given \\(θ\\).\nWe are told that the prior mean of \\(θ\\) is 100 and prior variance for \\(θ\\) is 225. This information is based on the results of previous studies on the topic. We will use the Gamma(a,b) density (see previous question) as a prior for\n\\(θ\\) because this is a conjugate prior to the Poisson distribution.\n\nFirst, visualize the prior, a Gamma density prior for \\(\\theta\\) based on the above information.\n\n[Hint: we know that for a Gamma density with parameters a, b, the mean is \\(\\frac{a}{b}\\) and the variance is \\(\\frac{a}{b^2}\\). Since we are given values for the mean and variance, we can solve for a,b, which gives us the Gamma density.]\n\n\\[\n\\left.\n\\begin{array}{l}\n\\frac{a}{b} = 100 \\\\\n\\frac{a}{b^2} = 225\n\\end{array}\n\\right\\}\n\\Longrightarrow\n\\left.\n\\begin{array}{l}\na= \\frac{100 \\times 100}{225} \\\\\nb= \\frac{100}{225}\n\\end{array}\n\\right\\}\n\\]\n\n\n\n\n\n\n\nNext, derive the posterior distribution of the parameter \\(θ\\) up to proportionality, and write down the posterior distribution in terms of the parameters of a Gamma distribution.\n\n\n\\[\n\\begin{aligned}\np(\\theta | X) &\\propto p(X |\\theta) p(\\theta) \\\\\np(\\theta | X) &\\propto \\prod_{i=1}^{n} \\exp(-\\theta) \\theta^{x_i} \\times \\theta^{a-1} \\exp\\{-b\\theta\\} \\\\\n               &\\propto \\exp(-n\\theta)\\theta^{\\sum_{i=1}^{n}x_i}\\theta^{a-1} \\exp\\{-b\\theta\\}\\\\\n               &\\propto \\exp(-(n+b)\\theta)\\theta^{a-1+\\sum_{i=1}^{n}x_i}\\\\\np(\\theta | X) &= Ga(a^*,b^*) = Ga\\left(a + \\sum_{i=1}^n x_i, b + n \\right),\n\\end{aligned}\n\\]\n\n\n\nPractical application\nSuppose we know that the number of “I” utterances from a particular individual is \\(115,97,79,131\\). Use the result you derived above to obtain the posterior distribution. In other words, write down the parameters of the Gamma distribution (call them \\(a^∗\\),\\(b^∗\\)) representing the posterior distribution of \\(θ\\) .\n\n\n\n\n\nNow suppose you get one new data point: 200. Using the posterior \\(Gamma(a^∗,b^∗)\\) as your prior, write down the updated posterior (in terms of the updated parameters of the Gamma distribution) given this new data point. Add the updated posterior to the plot you made above.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Exercises chapter 2</span>"
+    ]
+  },
+  {
+    "objectID": "chapter02.html#exercise-2.6-the-posterior-mean-is-a-weighted-mean-of-the-prior-mean-and-the-mle-poisson-gamma-conjugate-case",
+    "href": "chapter02.html#exercise-2.6-the-posterior-mean-is-a-weighted-mean-of-the-prior-mean-and-the-mle-poisson-gamma-conjugate-case",
+    "title": "Exercises chapter 2",
+    "section": "Exercise 2.6 The posterior mean is a weighted mean of the prior mean and the MLE (Poisson-Gamma conjugate case)",
+    "text": "Exercise 2.6 The posterior mean is a weighted mean of the prior mean and the MLE (Poisson-Gamma conjugate case)\nThe number of times an event happens per unit time can be modeled using a Poisson distribution, whose PMF is:\n\\[\n\\begin{equation}\nf(x\\mid \\theta) = \\frac{\\exp(-\\theta) \\theta^x}{x!}\n\\end{equation}\n\\]\nSuppose that we define a Gamma(a,b) prior for the rate parameter \\(θ\\). It is a fact (see exercises above) that the posterior of the \\(θ\\) parameter is a \\(Gamma(a^∗,b^∗)\\) distribution, where \\(a^∗\\) and \\(b^∗\\) are the updated parameters given the data: \\(θ∼Gamma(a^∗,b^∗)\\).\n\nProve that the posterior mean is a weighted mean of the prior mean and the maximum likelihood estimate (mean) of the Poisson-distributed data, \\(\\bar{x} = \\sum_{i=1}^n x/n\\). Hint: the mean of a Gamma distribution is \\(\\frac{a}{b}\\).\n\nSpecifically, what you have to prove is that:\n\\[\n\\frac{a^*}{b^*} = \\frac{a}{b} \\times \\frac{w_1}{w_1 + w_2} + \\bar{x} \\times \\frac{w_2}{w_1 + w_2}\n\\tag{2.1}\\]\nwhere \\(w_1=1\\) and \\(w_2=\\frac{n}{b}\\)\n\n\\[\n\\begin{aligned}\np(\\theta | X) &= Ga(a^*,b^*) = Ga\\left(a + \\sum_{i=1}^n x_i, b + n \\right) \\\\\n\\mathbb{E}[\\theta|X] &= \\frac{a^*}{b^*} = \\frac{a + \\sum_{i=1}^n x_i}{b + n}\\\\\n& = \\frac{\\frac{a}{b}+\\bar{x}\\frac{n}{b}}{1+\\frac{n}{b}} = \\\\\n&= \\frac{a}{b}\\frac{1}{1+\\frac{n}{b}}+\\bar{x}\\frac{\\frac{n}{b}}{1+\\frac{n}{b}}\n\\end{aligned}\n\\]\n\n\nGiven equation Equation 2.1, show that as \\(n\\) increases (as sample size goes up), the maximum likelihood estimate \\(\\bar{x}\\) dominates in determining the posterior mean, and when \\(n\\) gets smaller and smaller, the prior mean dominates in determining the posterior mean.\n\n\n\\[\n\\begin{aligned}\n\\lim_{n \\to \\infty}\\mathbb{E}[\\theta|X] &= \\bar{x}\\\\\n\\lim_{n \\to 0}\\mathbb{E}[\\theta|X] &= \\frac{a}{b}\\\\\n\\end{aligned}\n\\]\n\n\nFinally, given that the variance of a Gamma distribution is \\(\\frac{a}{b^2}\\), show that as \\(n\\) increases, the posterior variance will get smaller and smaller (the uncertainty on the posterior will go down).\n\n\n\\[\n\\begin{aligned}\n\\mathbb{V}[\\theta|X] &= \\frac{a*}{b*^2} = \\frac{a + \\sum_{i=1}^n x_i}{(b + n)^2} = \\frac{a + n\\bar{x}}{(b + n)^2}\\\\\n\\lim_{n \\to \\infty}\\mathbb{V}[\\theta|X] &= 0\\\\\n\\end{aligned}\n\\]",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Exercises chapter 2</span>"
+    ]
+  }
+]
