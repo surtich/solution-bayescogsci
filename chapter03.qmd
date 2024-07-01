@@ -1,0 +1,481 @@
+---
+title: "Exercises chapter 3"
+warning: false
+echo: false
+cache: true
+error: false
+render: html
+---
+
+```{r}
+library(latex2exp)
+library(tidyverse)
+library(ggplot2)
+library(brms)
+library(parallel)
+library(bcogsci)
+library(gt)
+library(patchwork)
+
+options(mc.cores = parallel::detectCores())
+```
+
+## Exercise 3.1 Check for parameter recovery in a linear model using simulated data.
+
+Generate some simulated independent and identically distributed data with  $n=100$ data points as follows:
+
+```{r}
+y <- rnorm(100, mean = 500, sd = 50)
+```
+
+Next, fit a simple linear model with a normal likelihood:
+
+$$
+\begin{equation}
+y_n  \sim \mathit{Normal}(\mu,\sigma) \tag{3.12} 
+\end{equation}
+$$
+
+Specify the following priors:
+
+$$
+\begin{equation}
+\begin{aligned}
+\mu &\sim \mathit{Uniform}(0, 60000) \\
+\sigma &\sim \mathit{Uniform}(0, 2000) 
+\end{aligned}
+\end{equation}
+$$
+
+Generate posterior predictive distributions of the parameters and check that the true values of the parameters $μ=500$, $σ=50$ are recovered by the model. What this means is that you should check whether these true values lie within the range of the posterior distributions of the two parameters. This is a good sanity check for finding out whether a model can in principle recover the true parameter values correctly.
+
+
+::: {style="color:blue"}
+```{r}
+#| echo: true
+#| error: false
+fit3.1 <-
+  brm(y ~ 1,
+      data = data.frame(y),
+      family = gaussian(),
+      prior = c(
+        prior(uniform(0, 60000), class = Intercept, lb = 0, ub = 60000),
+        prior(uniform(0, 2000), class = sigma, lb = 0, ub = 2000)
+      ),
+      chains = 4,
+      iter = 2000,
+      warmup = 1000,
+      file_refit = "on_change",
+      file = "fits/fit3.1",
+      save_model = "models/model3.1.stan"
+  )
+```
+
+```{r}
+print("mean")
+as_draws_df(fit3.1)$b_Intercept |>
+  quantile(c(0.025, .5, .975))
+```
+
+```{r}
+print("sigma")
+as_draws_df(fit3.1)$sigma |>
+  quantile(c(0.025, .5, .975))
+```
+:::
+
+## Exercise 3.2 A simple linear model.
+
+
+a. Fit the model `fit_press` with just a few iterations, say 50 iterations (set warmup to the default of 25, and use four chains). Does the model converge?
+
+
+::: {style="color:blue"}
+
+```{r}
+#| echo: true
+fit3.2.a <-
+  brm(t ~ 1,
+      data = df_spacebar,
+      family = gaussian(),
+      prior = c(
+        prior(uniform(0, 60000), class = Intercept, lb = 0, ub = 60000),
+        prior(uniform(0, 2000), class = sigma, lb = 0, ub = 2000)
+      ),
+      chains = 4,
+      iter = 50,
+      warmup = 25,
+      file_refit = "on_change",
+      file = "fits/fit3.2.a",
+      save_model = "models/model3.2.a.stan"
+  )
+
+mcmc_plot(fit3.2.a, type="trace")
+```
+
+```{r}
+sapply(as_draws_df(fit3.2.a) |> select(Intercept, sigma), quantile, c(0.025, .5, .975)) |> 
+         t() |>
+         data.frame(check.names = FALSE) |>
+         rownames_to_column() |>
+         gt() |>
+         fmt_number(decimals = 2)
+```
+
+:::
+
+b. Using normal distributions, choose priors that better represent **your** assumptions/beliefs about finger tapping times. To think about a reasonable set of priors for $μ$ and $σ$, you should come up with your own subjective assessment about what you think a reasonable range of values can be for $μ$ and how much variability might happen. There is no correct answer here, we’ll discuss priors in depth in chapter 6. Fit this model to the data. Do the posterior distributions change?
+
+
+::: {style="color:blue"}
+
+```{r}
+#| echo: true
+fit3.2.b <-
+  brm(t ~ 1,
+      data = df_spacebar,
+      family = gaussian(),
+      prior = c(
+        prior(normal(400, 100), class = Intercept),
+        prior(normal(50, 20), class = sigma)
+      ),
+      chains = 4,
+      iter = 2000,
+      warmup = 1000,
+      file_refit = "on_change",
+      file = "fits/fit3.2.b",
+      save_model = "models/model3.2.b.stan"
+  )
+
+mcmc_plot(fit3.2.b, type="trace")
+```
+
+```{r}
+sapply(as_draws_df(fit3.2.b) |> select(Intercept, sigma), quantile, c(0.025, .5, .975)) |> 
+         t() |>
+         data.frame(check.names = FALSE) |>
+         rownames_to_column() |>
+         gt() |>
+         fmt_number(decimals = 2)
+```
+
+:::
+
+## Exercise 3.3 Revisiting the button-pressing example with different priors.
+
+a. Can you come up with very informative priors that influence the posterior in a noticeable way (use normal distributions for priors, not uniform priors)? Again, there are no correct answers here; you may have to try several different priors before you can noticeably influence the posterior.
+
+
+::: {style="color:blue"}
+
+```{r}
+#| echo: true
+fit3.3.a <-
+  brm(t ~ 1,
+      data = df_spacebar,
+      family = gaussian(),
+      prior = c(
+        prior(normal(10000, 10), class = Intercept),
+        prior(normal(10, 1), class = sigma)
+      ),
+      chains = 4,
+      iter = 2000,
+      warmup = 1000,
+      file_refit = "on_change",
+      file = "fits/fit3.3.a",
+      save_model = "models/model3.3.a.stan"
+  )
+```
+
+
+
+```{r}
+sapply(as_draws_df(fit3.3.a) |> select(Intercept, sigma), quantile, c(0.025, .5, .975)) |> 
+         t() |>
+         data.frame(check.names = FALSE) |>
+         rownames_to_column() |>
+         gt() |>
+        fmt_number(decimals = 2)
+```
+
+
+
+
+:::
+
+
+b. Generate and plot prior predictive distributions based on this prior and plot them.
+
+
+```{r}
+# Define the function:
+normal_predictive_distribution <- function(mu_samples,
+                                           sigma_samples,
+                                           N_obs) {
+  map2_dfr(mu_samples, sigma_samples, function(mu, sigma) {
+    tibble(trialn = seq_len(N_obs),
+           t_pred = rnorm(N_obs, mu, sigma))
+  }, .id = "iter") %>%
+    # .id is always a string and
+    # needs to be converted to a number
+    mutate(iter = as.numeric(iter))
+}
+```
+
+
+```{r}
+N <- 4000
+
+prior_pred <- normal_predictive_distribution(
+  mu_samples = rnorm(N, 10000, 10),
+  sigma_samples = rnorm(N, 10, 1),
+  N_obs = nrow(df_spacebar)
+)
+
+prior_pred |>
+  group_by(iter) |>
+  summarize(
+    mean = mean(t_pred),
+    min = min(t_pred),
+    max = max(t_pred)
+  ) |>
+  pivot_longer(cols=-iter) |>
+  ggplot() +
+  geom_histogram(aes(x=value, y = after_stat(density)), fill="darkgreen", color="grey", binwidth = 3) +
+  facet_wrap(vars(name), ncol = 1) +
+  theme_classic()
+```
+
+c. Generate posterior predictive distributions based on this prior and plot them.
+
+```{r}
+posterior_pred <- normal_predictive_distribution(
+  mu_samples = as_draws_df(fit3.3.a)$Intercept,
+  sigma_samples = as_draws_df(fit3.3.a)$sigma,
+  N_obs = nrow(df_spacebar)
+)
+
+posterior_pred |>
+  group_by(iter) |>
+  summarize(
+    mean = mean(t_pred),
+    min = min(t_pred),
+    max = max(t_pred)
+  ) |>
+  pivot_longer(cols=-iter) |>
+  ggplot() +
+  geom_histogram(aes(x=value, y = after_stat(density)), fill="darkgreen", color="grey", binwidth = 50) +
+  facet_wrap(vars(name), ncol = 1, scales="free_y") +
+  theme_classic()
+```
+
+## Exercise 3.4 Posterior predictive checks with a log-normal model.
+
+a. For the log-normal model `fit_press_ln`, change the prior of $σ$ so that it is a log-normal distribution with location ($μ$) of $−2$ and scale ($σ$) of $0.5$. What does such a prior imply about your belief regarding button-pressing times in milliseconds? Is it a good prior? Generate and plot prior predictive distributions. Do the new estimates change compared to earlier models when you fit the model?
+
+```{r}
+N_samples <- 1000
+N_obs <- nrow(df_spacebar)
+mu_samples <- rnorm(N_samples, 6, 1.5)
+sigma_samples <- rlnorm(N_samples, -2, .5)
+prior_pred_ln <- normal_predictive_distribution(
+  mu_samples = mu_samples,
+  sigma_samples = sigma_samples,
+  N_obs = N_obs
+) %>%
+  mutate(t_pred = exp(t_pred))
+```
+
+
+```{r}
+fit3.4.a <-
+  brm(t ~ 1,
+      data = df_spacebar,
+      family = lognormal(),
+      prior = c(prior(normal(6, 1.5), class = Intercept),
+                prior(lognormal(-2, .5), class = sigma)),
+      sample_prior = "only",
+      file_refit = "on_change",
+      file = "fits/fit3.4.a",
+      save_model = "models/model3.4.a.stan")
+```
+
+```{r}
+as_draws_df(fit3.4.a) |> 
+  ggplot() +
+  geom_histogram(aes(x=sigma, y=after_stat(density)), bins = 30) +
+  theme_classic()
+```
+
+
+```{r}
+
+common_opts <- function() {
+  list(
+    scale_fill_manual(values="darkgreen"),
+    scale_color_manual(values="black"),
+    coord_cartesian(xlim = c(1, 300000)),
+    scale_x_continuous("Finger tapping times [ms]",
+      trans = "log",
+      breaks = c(1, 100, 1000, 10000, 100000),
+      labels = c(
+        "1", "100", "1000", "10000",
+        "100000"
+      )
+    ),
+    theme(legend.position = "none")
+  )
+}
+
+pp_check_min <- pp_check(fit3.4.a, type = "stat", stat = "min", prefix="ppd") +
+  ggtitle("Prior predictive distribution of minimum values") + common_opts()
+
+pp_check_mean <- pp_check(fit3.4.a, type = "stat", stat = "mean", prefix="ppd") +
+  ggtitle("Prior predictive distribution of means") + common_opts()
+
+pp_check_max <- pp_check(fit3.4.a, type = "stat", stat = "max", prefix="ppd") +
+  ggtitle("Prior predictive distribution of maximum values") + common_opts()
+
+pp_check_min + pp_check_mean + pp_check_max + 
+  plot_layout(nrow = 3, byrow = TRUE)
+```
+b. For the log-normal model, what is the mean (rather than median) time that takes to press the space bar, what is the standard deviation of the finger tapping times in milliseconds?
+
+```{r}
+fit3.4.b <-
+  brm(t ~ 1,
+      data = df_spacebar,
+      family = lognormal(),
+      prior = c(prior(normal(6, 1.5), class = Intercept),
+                prior(lognormal(-2, .5), class = sigma)),
+      file_refit = "on_change",
+      file = "fits/fit3.4.b",
+      save_model = "models/model3.4.b.stan")
+```
+
+```{r}
+draws_ln_mean <- exp(as_draws_df(fit3.4.b)$Intercept+(as_draws_df(fit3.4.b)$sigma)^2/2)
+draws_ln_sd <- draws_ln_mean*sqrt(exp((as_draws_df(fit3.4.b)$sigma)^2)-1)
+```
+
+
+```{r}
+round(c("mean [ms]"=mean(draws_ln_mean), "sd [ms]"=mean(draws_ln_sd)),2)
+```
+
+## Exercise 3.5 A skew normal distribution.
+
+Would it make sense to use a "skew normal distribution" instead of the log-normal? The skew normal distribution has three parameters: location $ξ$ (this is the lower-case version of the Greek letter $Ξ$, pronounced “chi”, with the “ch” pronounced like the “ch” in “Bach”), scale $ω$ (omega), and shape $α$. The distribution is right skewed if $α > 0$, is left skewed if $α<0$, and is identical to the regular normal distribution if $α=0$. For fitting this in `brms`, one needs to change `family` and set it to `skew_normal()`, and add a prior of `class = alpha` (location remains `class = Intercept` and scale, `class = sigma`).
+
+a. Fit this model with a prior that assigns approximately 95% of the prior probability of `alpha` to be between 0 and 10.
+
+
+$$
+\left.
+\begin{array}{r}
+\alpha \sim \mathcal{N}(\mu, \sigma) \\
+Pr(0 \le \alpha \le 10) = .95 \\
+Pr \left(\frac{0-\mu}{\sigma} \le \mathcal{N}(0,1) \le \frac{10-\mu}{\sigma} \right) = .95
+\end{array}
+\right\}
+\Longrightarrow
+\left.
+\begin{array}{l}
+\frac{0-\mu}{\sigma} = -1.96 \\
+\frac{10-\mu}{\sigma} = 1.96
+\end{array}
+\right\}
+\Longrightarrow
+\left.
+\begin{array}{l}
+\mu = 5\\
+\sigma = 5/1.96
+\end{array}
+\right\}
+$$
+
+```{r}
+fit3.5.a <-
+  brm(t ~ 1,
+      data = df_spacebar,
+      family = skew_normal(),
+      prior = c(prior(normal(5, 2.551067), class = "alpha")),
+      sample_prior = "yes",
+      file_refit = "on_change",
+      file = "fits/fit3.5.a",
+      save_model = "models/model3.5.a.stan")
+```
+
+b. Generate posterior predictive distributions and compare the posterior distribution of summary statistics of the skew normal with the normal and log-normal.
+
+```{r}
+
+common_opts <- function() {
+  list(
+     scale_fill_manual(values="darkgreen"),
+     scale_color_manual(values="black"),
+    theme(legend.position = "none")
+  )
+}
+pp_check_min <- pp_check(fit3.5.a, type = "stat", stat = "min") +
+  ggtitle("Posterior predictive distribution of minimum values") + common_opts() +
+  scale_x_continuous("Finger tapping times [ms]",
+      breaks = seq(90,150,10),
+      limits = c(90,150)
+  )
+
+pp_check_mean <- pp_check(fit3.5.a, type = "stat", stat = "mean") +
+  ggtitle("Posterior predictive distribution of means") + common_opts() +
+  scale_x_continuous("Finger tapping times [ms]",
+      breaks = seq(150,200,10),
+      limits = c(150,200)
+    )
+
+pp_check_max <- pp_check(fit3.5.a, type = "stat", stat = "max") +
+  ggtitle("Posterior predictive distribution of maximum values") + common_opts() +
+  scale_x_continuous("Finger tapping times [ms]",
+      breaks = seq(200,500,100),
+      limits = c(200,500)
+    )
+
+pp_check_min + pp_check_mean + pp_check_max + 
+  plot_layout(nrow = 3, byrow = TRUE)
+```
+```{r}
+rbind(
+  as_draws_df(fit3.2.b)[,c("b_Intercept", "sigma")] |> mutate(model = "normal"),
+  as_draws_df(fit3.4.b)[,c("b_Intercept", "sigma")] |> mutate(model = "log normal", b_Intercept = draws_ln_mean, sigma = draws_ln_sd),
+  as_draws_df(fit3.5.a)[,c("b_Intercept", "sigma")] |> mutate(model = "skew normal")
+) |> pivot_longer(col=-model, names_to = "variable") |>
+  summarize(
+    mean = mean(value),
+    "2.5%" = quantile(value, .025),
+    "97.5%" = quantile(value, .975),
+    .by = c(model, variable)
+  ) |>
+  pivot_longer(cols = -c(model, variable), names_to="stat") |>
+  pivot_wider(names_from = c(model, variable), values_from = value) |>
+  gt() |>
+  tab_spanner(
+    label = "intercept",
+    columns = ends_with("b_Intercept")
+  ) |>
+  tab_spanner(
+    label = "sigma",
+    columns = ends_with("sigma")
+  ) |>
+  cols_label(
+    stat = "stat",
+    starts_with("normal") ~ "normal",
+    starts_with("log normal") ~ "log normal",
+    starts_with("skew normal") ~ "skew normal"
+  ) |> fmt_number(decimals = 2)
+```
+
+
+
+
+
+
+
+

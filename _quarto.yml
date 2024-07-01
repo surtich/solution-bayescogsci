@@ -10,6 +10,7 @@ book:
     - index.qmd
     - chapter01.qmd
     - chapter02.qmd
+    - chapter03.qmd
 
 bibliography: references.bib
 
