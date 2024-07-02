@@ -64,7 +64,7 @@
     "href": "chapter01.html#exercise-1.6-practice-getting-summaries-from-samplespart-1",
     "title": "Exercises chapter 1",
     "section": "Exercise 1.6 Practice getting summaries from samples–Part 1",
-    "text": "Exercise 1.6 Practice getting summaries from samples–Part 1\nGiven data that is generated as follows:\n\ndata_gen1 &lt;- rnorm(1000, 300, 200)\n\nCalculate the mean, variance, and the lower quantile q1 and the upper quantile q2, that are equidistant and such that the range of probability between them is 80%.\n\nc(mean=mean(data_gen1), var=var(data_gen1), quantile(data_gen1, c(.1, .9)))\n\n       mean         var         10%         90% \n  300.17762 40097.00730    48.86414   570.06581",
+    "text": "Exercise 1.6 Practice getting summaries from samples–Part 1\nGiven data that is generated as follows:\n\ndata_gen1 &lt;- rnorm(1000, 300, 200)\n\nCalculate the mean, variance, and the lower quantile q1 and the upper quantile q2, that are equidistant and such that the range of probability between them is 80%.\n\nc(mean=mean(data_gen1), var=var(data_gen1), quantile(data_gen1, c(.1, .9)))\n\n       mean         var         10%         90% \n  297.15229 39900.76613    38.07058   560.39107",
     "crumbs": [
       "<span class='chapter-number'>1</span>  <span class='chapter-title'>Exercises chapter 1</span>"
     ]
@@ -74,7 +74,7 @@
     "href": "chapter01.html#exercise-1.7-practice-getting-summaries-from-samplespart-2.",
     "title": "Exercises chapter 1",
     "section": "Exercise 1.7 Practice getting summaries from samples–Part 2.",
-    "text": "Exercise 1.7 Practice getting summaries from samples–Part 2.\nThis time we generate the data with a truncated normal distribution from the package extraDistr. The details of this distribution will be discussed later in section 4.1 and in the Box 4.1, but for now we can treat it as an unknown generative process:\n\nlibrary(extraDistr)\ndata_gen1 &lt;- rtnorm(1000, 300, 200, a = 0)\n\nUsing the sample data, calculate the mean, variance, and the lower quantile q1 and the upper quantile q2, such that the probability of observing values between these two quantiles is 80%.\n\nc(mean=mean(data_gen1), var=var(data_gen1), quantile(data_gen1, c(.1, .9)))\n\n      mean        var        10%        90% \n  319.9844 29298.4895   110.7407   551.6280",
+    "text": "Exercise 1.7 Practice getting summaries from samples–Part 2.\nThis time we generate the data with a truncated normal distribution from the package extraDistr. The details of this distribution will be discussed later in section 4.1 and in the Box 4.1, but for now we can treat it as an unknown generative process:\n\nlibrary(extraDistr)\ndata_gen1 &lt;- rtnorm(1000, 300, 200, a = 0)\n\nUsing the sample data, calculate the mean, variance, and the lower quantile q1 and the upper quantile q2, such that the probability of observing values between these two quantiles is 80%.\n\nc(mean=mean(data_gen1), var=var(data_gen1), quantile(data_gen1, c(.1, .9)))\n\n      mean        var        10%        90% \n  327.1362 30010.6895   101.6251   554.9934",
     "crumbs": [
       "<span class='chapter-number'>1</span>  <span class='chapter-title'>Exercises chapter 1</span>"
     ]
@@ -197,6 +197,56 @@
     "text": "Exercise 3.5 A skew normal distribution.\nWould it make sense to use a “skew normal distribution” instead of the log-normal? The skew normal distribution has three parameters: location \\(ξ\\) (this is the lower-case version of the Greek letter \\(Ξ\\), pronounced “chi”, with the “ch” pronounced like the “ch” in “Bach”), scale \\(ω\\) (omega), and shape \\(α\\). The distribution is right skewed if \\(α &gt; 0\\), is left skewed if \\(α&lt;0\\), and is identical to the regular normal distribution if \\(α=0\\). For fitting this in brms, one needs to change family and set it to skew_normal(), and add a prior of class = alpha (location remains class = Intercept and scale, class = sigma).\n\nFit this model with a prior that assigns approximately 95% of the prior probability of alpha to be between 0 and 10.\n\n\\[\n\\left.\n\\begin{array}{r}\n\\alpha \\sim \\mathcal{N}(\\mu, \\sigma) \\\\\nPr(0 \\le \\alpha \\le 10) = .95 \\\\\nPr \\left(\\frac{0-\\mu}{\\sigma} \\le \\mathcal{N}(0,1) \\le \\frac{10-\\mu}{\\sigma} \\right) = .95\n\\end{array}\n\\right\\}\n\\Longrightarrow\n\\left.\n\\begin{array}{l}\n\\frac{0-\\mu}{\\sigma} = -1.96 \\\\\n\\frac{10-\\mu}{\\sigma} = 1.96\n\\end{array}\n\\right\\}\n\\Longrightarrow\n\\left.\n\\begin{array}{l}\n\\mu = 5\\\\\n\\sigma = 5/1.96\n\\end{array}\n\\right\\}\n\\]\n\nGenerate posterior predictive distributions and compare the posterior distribution of summary statistics of the skew normal with the normal and log-normal.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nstat\nintercept\nsigma\n\n\nnormal\nlog normal\nskew normal\nnormal\nlog normal\nskew normal\n\n\n\n\nmean\n168.71\n170.10\n169.67\n25.07\n23.00\n24.04\n\n\n2.5%\n166.05\n167.76\n167.24\n23.37\n21.32\n22.20\n\n\n97.5%\n171.21\n172.50\n172.24\n26.99\n24.80\n26.03",
     "crumbs": [
       "<span class='chapter-number'>3</span>  <span class='chapter-title'>Exercises chapter 3</span>"
+    ]
+  },
+  {
+    "objectID": "chapter04.html#exercise-4.1-a-simple-linear-regression-power-posing-and-testosterone.",
+    "href": "chapter04.html#exercise-4.1-a-simple-linear-regression-power-posing-and-testosterone.",
+    "title": "Exercises chapter 4",
+    "section": "Exercise 4.1 A simple linear regression: Power posing and testosterone.",
+    "text": "Exercise 4.1 A simple linear regression: Power posing and testosterone.\nLoad the following data set:\n\ndata(\"df_powerpose\")\nhead(df_powerpose) |&gt; gt()\n\n\n\n\n\n\n\nid\nhptreat\nfemale\nage\ntestm1\ntestm2\n\n\n\n\n29\nHigh\nMale\n19\n38.725\n62.375\n\n\n30\nLow\nFemale\n20\n32.770\n29.235\n\n\n31\nHigh\nFemale\n20\n32.320\n27.510\n\n\n32\nLow\nFemale\n18\n17.995\n28.655\n\n\n34\nLow\nFemale\n21\n73.580\n44.670\n\n\n35\nHigh\nFemale\n20\n80.695\n105.485\n\n\n\n\n\n\n\nThe research hypothesis is that on average, assigning a subject a high power pose vs. a low power pose will lead to higher testosterone levels after treatment. Assuming that you know nothing about typical ranges of testosterone using salivary measurement, you can use the default priors in brms for the target parameter(s).\nInvestigate this claim using a linear model and the default priors of brms. You’ll need to estimate the effect of a new variable that encodes the change in testosterone.\nThe data set, which was originally published in Carney, Cuddy, and Yap (2010) but released in modified form by Fosse (2016), shows the testosterone levels of 39 different individuals, before and after treatment, where treatment refers to each individual being assigned to a high power pose or a low power pose. In the original paper by Carney, Cuddy, and Yap (2010), the unit given for testosterone measurement (estimated from saliva samples) was picograms per milliliter (pg/ml). One picogram per milliliter is 0.001 nanogram per milliliter (ng/ml).\n\n\n\n\n\n\n\n\nterm\nestimate\nstd.error\nconf.low\nconf.high\n\n\n\n\n(Intercept)\n4.37\n4.61\n−4.77\n13.26\n\n\nhptreatLow\n−8.70\n6.78\n−21.98\n4.59\n\n\nsd__Observation\n20.51\n2.37\n16.42\n25.74",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Exercises chapter 4</span>"
+    ]
+  },
+  {
+    "objectID": "chapter04.html#exercise-4.2-another-linear-regression-model-revisiting-attentional-load-effect-on-pupil-size.",
+    "href": "chapter04.html#exercise-4.2-another-linear-regression-model-revisiting-attentional-load-effect-on-pupil-size.",
+    "title": "Exercises chapter 4",
+    "section": "Exercise 4.2 Another linear regression model: Revisiting attentional load effect on pupil size.",
+    "text": "Exercise 4.2 Another linear regression model: Revisiting attentional load effect on pupil size.\nHere, we revisit the analysis shown in the chapter, on how attentional load affects pupil size.\n\nOur priors for this experiment were quite arbitrary. How do the prior predictive distributions look like? Do they make sense?\n\n\n\n\n\n\n\nIs our posterior distribution sensitive to the priors that we selected? Perform a sensitivity analysis to find out whether the posterior is affected by our choice of prior for the \\(σ\\).\n\n\n\n\n\n\n\n\n\nTerm\nmodel 4.2.a\nmodel 4.2.b\n\n\nEstimate\nEst.Error\nQ2.5\nQ97.5\nEstimate\nEst.Error\nQ2.5\nQ97.5\n\n\n\n\nb_Intercept\n701.27\n19.96\n660.99\n740.25\n700.77\n19.29\n662.47\n738.24\n\n\nb_c_load\n33.84\n11.93\n10.66\n57.94\n33.76\n11.71\n10.74\n56.45\n\n\nsigma\n128.73\n15.47\n102.59\n163.05\n125.32\n14.12\n100.90\n156.28\n\n\n\n\n\n\n\n\nOur data set includes also a column that indicates the trial number. Could it be that trial has also an effect on the pupil size? As in lm, we indicate another main effect with a + sign. How would you communicate the new results?\n\n\n\n\n\n\n\n\n\nterm\nestimate\nstd.error\nconf.low\nconf.high\n\n\n\n\n(Intercept)\n701.68\n17.31\n668.02\n735.71\n\n\nc_load\n31.95\n9.98\n11.82\n51.88\n\n\nc_trial\n−5.50\n1.48\n−8.35\n−2.54\n\n\nsd__Observation\n108.46\n12.62\n86.85\n136.24",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Exercises chapter 4</span>"
+    ]
+  },
+  {
+    "objectID": "chapter04.html#exercise-4.3-log-normal-model-revisiting-the-effect-of-trial-on-finger-tapping-times.",
+    "href": "chapter04.html#exercise-4.3-log-normal-model-revisiting-the-effect-of-trial-on-finger-tapping-times.",
+    "title": "Exercises chapter 4",
+    "section": "Exercise 4.3 Log-normal model: Revisiting the effect of trial on finger tapping times.",
+    "text": "Exercise 4.3 Log-normal model: Revisiting the effect of trial on finger tapping times.\nWe continue considering the effect of trial on finger tapping times.\n\nEstimate the slowdown in milliseconds between the last two times the subject pressed the space bar in the experiment.\n\n\n\nmedian effect          2.5%         97.5% \n   0.09640319    0.07190941    0.12111526 \n\n\n\n\nmean effect        2.5%       97.5% \n 0.09713902  0.07250484  0.12203735 \n\n\n\nHow would you change your model (keeping the log-normal likelihood) so that it includes centered log-transformed trial numbers or square-root-transformed trial numbers (instead of centered trial numbers)? Does the effect in milliseconds change?\n\n\n\nmedian effect          2.5%         97.5% \n   0.02107170    0.01554976    0.02656155 \n\n\n\n\nmean effect        2.5%       97.5% \n 0.02122792  0.01567363  0.02676155",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Exercises chapter 4</span>"
+    ]
+  },
+  {
+    "objectID": "chapter04.html#exercise-4.4-logistic-regression-revisiting-the-effect-of-set-size-on-free-recall.",
+    "href": "chapter04.html#exercise-4.4-logistic-regression-revisiting-the-effect-of-set-size-on-free-recall.",
+    "title": "Exercises chapter 4",
+    "section": "Exercise 4.4 Logistic regression: Revisiting the effect of set size on free recall.",
+    "text": "Exercise 4.4 Logistic regression: Revisiting the effect of set size on free recall.\nOur data set includes also a column coded as tested that indicates the position of the queued word. (In Figure 4.13 tested would be 3). Could it be that position also has an effect on recall accuracy? How would you incorporate this in the model? (We indicate another main effect with a + sign).\n\n\n\n\n\n\n\n\nterm\nestimate\nstd.error\nconf.low\nconf.high\n\n\n\n\n(Intercept)\n1.93\n0.31\n1.35\n2.57\n\n\nc_set_size\n−0.18\n0.08\n−0.34\n−0.01\n\n\nc_tested\n−0.03\n0.08\n−0.19\n0.14\n\n\n\n\n\n\n\n\n\n Estimate      Q2.5     Q97.5 \n0.8699825 0.7948330 0.9290336",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Exercises chapter 4</span>"
+    ]
+  },
+  {
+    "objectID": "chapter04.html#exercise-4.5-red-is-the-sexiest-color.",
+    "href": "chapter04.html#exercise-4.5-red-is-the-sexiest-color.",
+    "title": "Exercises chapter 4",
+    "section": "Exercise 4.5 Red is the sexiest color.",
+    "text": "Exercise 4.5 Red is the sexiest color.\nLoad the following data set:\n\nhead(df_red) |&gt; gt()\n\n\n\n\n\n\n\nrisk\nage\nred\npink\nredorpink\n\n\n\n\n0\n19\n0\n0\n0\n\n\n0\n25\n0\n0\n0\n\n\n0\n20\n0\n0\n0\n\n\n0\n20\n0\n0\n0\n\n\n0\n20\n0\n0\n0\n\n\n0\n18\n0\n0\n0\n\n\n\n\n\n\n\nThe data set is from a study (Beall and Tracy 2013) that contains information about the color of the clothing worn (red, pink, or red or pink) when the subject (female) is at risk of becoming pregnant (is ovulating, self-reported). The broader issue being investigated is whether women wear red more often when they are ovulating (in order to attract a mate). Using logistic regressions, fit three different models to investigate whether being ovulating increases the probability of wearing (a) red, (b) pink, or (c) either pink or red. Use priors that are reasonable (in your opinion).\n\nred\n\n\\[\nred_n \\sim \\text{Bernoulli}(\\theta_n) \\\\\n\\log\\left(\\frac{\\theta}{1-\\theta}\\right) = \\alpha + \\beta \\cdot \\text{red}\n\\]\n\npink\n\n\neither pink or red\n\n\n\n\n\n\n\n\n\ncolor\n0\n1\n\n\n\n\nred\n0.073\n0.075\n\n\npink\n0.117\n0.121\n\n\neither pink or red\n0.179\n0.187",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Exercises chapter 4</span>"
     ]
   }
 ]

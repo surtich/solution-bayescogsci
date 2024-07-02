@@ -1,0 +1,373 @@
+---
+title: "Exercises chapter 4"
+warning: false
+echo: false
+cache: true
+error: false
+render: html
+---
+
+```{r}
+library(latex2exp)
+library(tidyverse)
+library(ggplot2)
+library(brms)
+library(parallel)
+library(bcogsci)
+library(gt)
+library(patchwork)
+library(broom.mixed)
+
+options(mc.cores = parallel::detectCores())
+```
+
+## Exercise 4.1 A simple linear regression: Power posing and testosterone.
+
+Load the following data set:
+
+```{r}
+#| echo: true
+data("df_powerpose")
+head(df_powerpose) |> gt()
+```
+
+The research hypothesis is that on average, assigning a subject a high power pose vs. a low power pose will lead to higher testosterone levels after treatment. Assuming that you know nothing about typical ranges of testosterone using salivary measurement, you can use the default priors in brms for the target parameter(s).
+
+Investigate this claim using a linear model and the default priors of brms. You’ll need to estimate the effect of a new variable that encodes the change in testosterone.
+
+The data set, which was originally published in Carney, Cuddy, and Yap (2010) but released in modified form by Fosse (2016), shows the testosterone levels of 39 different individuals, before and after treatment, where treatment refers to each individual being assigned to a high power pose or a low power pose. In the original paper by Carney, Cuddy, and Yap (2010), the unit given for testosterone measurement (estimated from saliva samples) was picograms per milliliter (pg/ml). One picogram per milliliter is 0.001 nanogram per milliliter (ng/ml).
+
+```{r}
+df_powerpose <- df_powerpose |> mutate(testdiff = testm2 - testm1)
+fit4.1 <-
+  brm(testdiff ~ hptreat,
+      data = df_powerpose,
+      family = gaussian(),
+      file_refit = "on_change",
+      file = "fits/fit4.1",
+      save_model = "models/model4.1.stan")
+
+tidy(fit4.1) |> select(-c(effect, component, group)) |> gt() |> fmt_number(decimals = 2) 
+```
+
+## Exercise 4.2 Another linear regression model: Revisiting attentional load effect on pupil size.
+
+Here, we revisit the analysis shown in the chapter, on how attentional load affects pupil size.
+
+a. Our priors for this experiment were quite arbitrary. How do the prior predictive distributions look like? Do they make sense?
+
+```{r}
+df_pupil <- df_pupil |>
+   mutate(c_load = load - mean(load))
+fit4.2.a <-
+  brm(p_size ~ 1 + c_load,
+      data = df_pupil,
+      family = gaussian(),
+      prior = c(prior(normal(1000, 500), class = Intercept),
+                prior(normal(0, 1000), class = sigma),
+                prior(normal(0, 100), class = b, coef = c_load)),
+      sample_prior = "only",
+      file_refit = "on_change",
+      file = "fits/fit4.2.a",
+      save_model = "models/model4.2.a.stan")
+```
+```{r}
+as_draws_df(fit4.2.a) |> select(Intercept, b_c_load, sigma) |> pivot_longer(cols=everything(), names_to = "term", values_to="value") |>
+  ggplot() +
+  geom_histogram(aes(x=value, y=after_stat(density))) +
+  facet_wrap(~term, nrow = 3, scales="free") +
+  theme_classic()
+```
+
+b. Is our posterior distribution sensitive to the priors that we selected? Perform a sensitivity analysis to find out whether the posterior is affected by our choice of prior for the $σ$.
+
+
+```{r}
+fit4.2.b <-
+  brm(p_size ~ 1 + c_load,
+      data = df_pupil,
+      family = gaussian(),
+      prior = c(prior(normal(1000, 500), class = Intercept),
+                prior(normal(0, 100), class = sigma),
+                prior(normal(0, 100), class = b, coef = c_load)),
+      file_refit = "on_change",
+      file = "fits/fit4.2.b",
+      save_model = "models/model4.2.b.stan")
+```
+```{r}
+fit4.2.a <- update(fit4.2.a, sample_prior="no")
+```
+
+```{r}
+summary4.2.a <- posterior_summary(fit4.2.a)[1:3,] |> data.frame() |> rownames_to_column("Term")
+summary4.2.b <- posterior_summary(fit4.2.b)[1:3,] |> data.frame()
+
+bind_cols(c("4.2.a"=summary4.2.a,"4.2.b"=summary4.2.b)) |>
+  rename(Term=1) |>
+  gt() |>
+  tab_spanner(columns=starts_with("4.2.a"), label="model 4.2.a") |>
+  tab_spanner(columns=starts_with("4.2.b"), label="model 4.2.b") |>
+  cols_label_with(
+    fn = function(name) gsub("4\\.2\\.[ab]\\.", "", name)
+  ) |>
+  fmt_number(decimals = 2)
+```
+
+
+c. Our data set includes also a column that indicates the trial number. Could it be that trial has also an effect on the pupil size? As in `lm`, we indicate another main effect with a `+` sign. How would you communicate the new results?
+
+
+```{r}
+df_pupil$c_trial <- df_pupil$trial-mean(df_pupil$trial)
+fit4.2.c <-
+  brm(p_size ~ 1 + c_load + c_trial,
+      data = df_pupil,
+      family = gaussian(),
+      prior = c(prior(normal(1000, 500), class = Intercept),
+                prior(normal(0, 100), class = sigma),
+                prior(normal(0, 100), class = b, coef = c_load),
+                prior(normal(0, 100), class = b, coef = c_trial)),
+      file_refit = "on_change",
+      file = "fits/fit4.2.c",
+      save_model = "models/model4.2.c.stan")
+```
+
+```{r}
+tidy(fit4.2.c) |> select(-c(effect, component, group)) |> gt() |> fmt_number(decimals = 2) 
+```
+
+## Exercise 4.3 Log-normal model: Revisiting the effect of trial on finger tapping times.
+
+We continue considering the effect of trial on finger tapping times.
+
+a. Estimate the slowdown in milliseconds between the last two times the subject pressed the space bar in the experiment.
+
+```{r}
+df_spacebar$c_trial <- df_spacebar$trial-mean(df_spacebar$trial)
+fit4.3.a <-
+  brm(t ~ 1 + c_trial,
+      data = df_spacebar,
+      family = lognormal(),
+      prior = c(prior(normal(6, 1.5), class = Intercept),
+                prior(normal(0, 1), class = sigma),
+                prior(normal(0, .01), class = b, coef = c_trial)),
+      file_refit = "on_change",
+      file = "fits/fit4.3.a",
+      save_model = "models/model4.3.a.stan")
+```
+
+```{r}
+alpha_samples <- as_draws_df(fit4.3.a)$b_Intercept
+beta_samples <- as_draws_df(fit4.3.a)$b_c_trial
+last_trial <- max(df_spacebar$c_trial)
+penultimate_trial <- last_trial - 1
+
+effect_last_ms <-
+  exp(alpha_samples + last_trial * beta_samples) -
+  exp(alpha_samples + penultimate_trial * beta_samples)
+
+c("median effect"= mean(effect_last_ms),
+  quantile(effect_last_ms, c(0.025, 0.975)))
+```
+
+```{r}
+last <- fitted(fit4.3.a,
+                 newdata = data.frame(c_trial=c(last_trial, penultimate_trial)),
+                 summary = FALSE)
+
+effect_last_ms <- last[, 1] - last[, 2]
+
+c("mean effect" = mean(effect_last_ms),
+  quantile(effect_last_ms, c(0.025, 0.975)))
+```
+
+b. How would you change your model (keeping the log-normal likelihood) so that it includes centered log-transformed trial numbers or square-root-transformed trial numbers (instead of centered trial numbers)? Does the effect in milliseconds change?
+
+```{r}
+df_spacebar$c_ltrial <- log(df_spacebar$trial)-mean(log(df_spacebar$trial))
+fit4.3.b <-
+  brm(t ~ 1 + c_ltrial,
+      data = df_spacebar,
+      family = lognormal(),
+      prior = c(prior(normal(6, 1.5), class = Intercept),
+                prior(normal(0, 1), class = sigma),
+                prior(normal(0, .01), class = b, coef = c_ltrial)),
+      file_refit = "on_change",
+      file = "fits/fit4.3.b",
+      save_model = "models/model4.3.b.stan")
+```
+
+```{r}
+alpha_samples <- as_draws_df(fit4.3.b)$b_Intercept
+beta_samples <- as_draws_df(fit4.3.b)$b_c_ltrial
+last_trial <- max(df_spacebar$c_ltrial)
+penultimate_trial <- df_spacebar |> arrange(desc(c_ltrial)) |> slice(2) |> pull(c_ltrial)
+
+effect_last_ms <-
+  exp(alpha_samples + last_trial * beta_samples) -
+  exp(alpha_samples + penultimate_trial * beta_samples)
+
+c("median effect"= mean(effect_last_ms),
+  quantile(effect_last_ms, c(0.025, 0.975)))
+```
+
+```{r}
+last <- fitted(fit4.3.b,
+                 newdata = data.frame(c_ltrial=c(last_trial, penultimate_trial)),
+                 summary = FALSE)
+
+effect_last_ms <- last[, 1] - last[, 2]
+
+c("mean effect" = mean(effect_last_ms),
+  quantile(effect_last_ms, c(0.025, 0.975)))
+```
+
+## Exercise 4.4 Logistic regression: Revisiting the effect of set size on free recall.
+
+Our data set includes also a column coded as `tested` that indicates the position of the queued word. (In Figure 4.13 tested would be 3). Could it be that position also has an effect on recall accuracy? How would you incorporate this in the model? (We indicate another main effect with a `+` sign).
+
+```{r}
+df_recall <- df_recall |>
+  mutate(
+    c_set_size = set_size - mean(set_size),
+    c_tested = tested - mean(tested)
+  ) 
+
+fit4.4 <- brm(correct ~ 1 + c_set_size + c_tested,
+  data = df_recall,
+  family = bernoulli(link = logit),
+  prior = c(prior(normal(0, 1.5), class = Intercept),
+            prior(normal(0, .1), class = b, coef = c_set_size),
+            prior(normal(0, .1), class = b, coef = c_tested)),
+  file_refit = "on_change",
+  file = "fits/fit4.4",
+  save_model = "models/model4.4.stan"
+)
+```
+
+```{r}
+tidy(fit4.4) |> select(-c(effect, component, group)) |> gt() |> fmt_number(decimals = 2) 
+```
+
+```{r}
+fitted(fit4.4,
+       newdata = data.frame(c_set_size = 0, c_tested = 0),
+       summary = TRUE)[,c("Estimate", "Q2.5","Q97.5")]
+
+```
+
+## Exercise 4.5 Red is the sexiest color.
+
+Load the following data set:
+
+```{r}
+#| echo: true
+head(df_red) |> gt()
+```
+
+The data set is from a study (Beall and Tracy 2013) that contains information about the color of the clothing worn (red, pink, or red or pink) when the subject (female) is at risk of becoming pregnant (is ovulating, self-reported). The broader issue being investigated is whether women wear red more often when they are ovulating (in order to attract a mate). Using logistic regressions, fit three different models to investigate whether being ovulating increases the probability of wearing (a) red, (b) pink, or (c) either pink or red. Use priors that are reasonable (in your opinion).
+
+a. red
+
+$$
+red_n \sim \text{Bernoulli}(\theta_n) \\
+\log\left(\frac{\theta}{1-\theta}\right) = \alpha + \beta \cdot \text{red}
+$$
+
+```{r}
+fit4.5.a <- brm(red ~ 1 + risk,
+  data = df_red,
+  family = bernoulli(link = logit),
+  prior = c(prior(normal(0, 1.5), class = Intercept),
+            prior(normal(0, .1), class = b, coef = risk)),
+  file_refit = "on_change",
+  file = "fits/fit4.5.a",
+  save_model = "models/model4.5.a.stan"
+)
+```
+
+
+```{r}
+df.a <- fitted(fit4.5.a,
+       newdata = data.frame(risk = c(0, 1)),
+       summary = TRUE)[,c("Estimate")] |> 
+data.frame(color = "red", value = c(0,1)) |> rename(prob=1)
+```
+
+
+b. pink
+
+
+```{r}
+fit4.5.b <- brm(pink ~ 1 + risk,
+  data = df_red,
+  family = bernoulli(link = logit),
+  prior = c(prior(normal(0, 1.5), class = Intercept),
+            prior(normal(0, .1), class = b, coef = risk)),
+  file_refit = "on_change",
+  file = "fits/fit4.5.b",
+  save_model = "models/model4.5.b.stan"
+)
+```
+
+
+```{r}
+df.b <- fitted(fit4.5.b,
+       newdata = data.frame(risk = c(0, 1)),
+       summary = TRUE)[,c("Estimate")] |> 
+data.frame(color = "pink", value = c(0,1)) |> rename(prob=1)
+```
+
+c. either pink or red
+
+```{r}
+fit4.5.c <- brm(redorpink ~ 1 + risk,
+  data = df_red,
+  family = bernoulli(link = logit),
+  prior = c(prior(normal(0, 1.5), class = Intercept),
+            prior(normal(0, .1), class = b, coef = risk)),
+  file_refit = "on_change",
+  file = "fits/fit4.5.c",
+  save_model = "models/model4.5.c.stan"
+)
+```
+
+```{r}
+df.c <- fitted(fit4.5.c,
+       newdata = data.frame(risk = c(0, 1)),
+       summary = TRUE)[,c("Estimate")] |> 
+data.frame(color = "either pink or red", value = c(0,1)) |> rename(prob=1)
+```
+
+```{r}
+bind_rows(df.a, df.b, df.c) |> select(color, value, prob) |> 
+  pivot_wider(id_cols = color, values_from = prob, names_from = value) |>
+  gt() |>
+  fmt_number(decimals = 3) |>
+  tab_style(
+    style = list(cell_fill(color = "red"),
+                 cell_text(color = "white", weight = "bold")),
+    locations = cells_body(rows = 1, columns=3)
+  ) |>
+  tab_style(
+    style = list(
+      cell_fill(color = "pink"),
+      cell_text(color = "white", weight = "bold")),
+    locations = cells_body(rows = 2, columns=3)
+  ) |>
+  tab_style(
+    style = list(
+      cell_fill(color = "#FF66B2"),
+      cell_text(color = "white", weight = "bold")),
+    locations = cells_body(rows = 3, columns=3)
+  )
+```
+
+
+
+
+
+
+
+
+
