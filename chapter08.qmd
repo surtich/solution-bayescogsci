@@ -215,7 +215,7 @@ bind_rows(
       positive.grammatical - positive.ungrammatical,
       positive.grammatical.1 - positive.grammatical.2
     )
-  )
+  ) |> gt()
 ```
 
 ```{r}

@@ -13,6 +13,8 @@ book:
     - chapter03.qmd
     - chapter04.qmd
     - chapter05.qmd
+    - chapter08.qmd
+    - chapter09.qmd
 
 bibliography: references.bib
 
