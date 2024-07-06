@@ -1,0 +1,288 @@
+---
+title: "Exercises chapter 8"
+warning: false
+echo: false
+cache: true
+error: false
+render: html
+---
+
+```{r}
+library(latex2exp)
+library(tidyverse)
+library(ggplot2)
+library(brms)
+library(parallel)
+library(bcogsci)
+library(gt)
+library(patchwork)
+library(broom.mixed)
+library(bayesplot)
+library(MASS)
+library(hypr)
+
+options(mc.cores = parallel::detectCores())
+```
+
+## Exercise 8.1 Contrast coding for a four-condition design
+
+Load the following data. These data are from Experiment 1 in a set of reading studies on Persian (Safavi, Husain, and Vasishth 2016). This is a self-paced reading study on particle-verb constructions, with a $2×2$ design: distance (short, long) and predictability (predictable, unpredictable). The data are from a critical region in the sentence. All the data from the Safavi, Husain, and Vasishth (2016) paper are available from https://github.com/vasishth/SafaviEtAl2016.
+
+```{r}
+head(df_persianE1) |> gt()
+```
+The four conditions are:
+
+* Distance=short and Predictability=unpredictable
+* Distance=short and Predictability=predictable
+* Distance=long and Predictability=unpredictable
+* Distance=long and Predictability=predictable
+
+The researcher wants to do the following sets of comparisons between condition means:
+
+Compare the condition labeled Distance=short and Predictability=unpredictable with each of the following conditions:
+
+
+* Distance=short and Predictability=predictable
+* Distance=long and Predictability=unpredictable
+* Distance=long and Predictability=predictable
+
+Questions:
+
+* Which contrast coding is needed for such a comparison?
+* First, define the relevant contrast coding. Hint: You can do it by creating a condition column labeled a,b,c,d and then use a built-in contrast coding function.
+* Then, use the `hypr` library function to confirm that your contrast coding actually does the comparison you need.
+* Fit a simple linear model with the above contrast coding and display the slopes, which constitute the relevant comparisons.
+* Now, compute each of the four conditions’ means and check that the slopes from the linear model correspond to the relevant differences between means that you obtained from the data.
+
+```{r}
+dat1 <- df_persianE1 |> 
+  mutate(condition = factor(
+                            interaction(distance, predability), 
+                            levels=c(
+                              "short.unpredictable", 
+                              "short.predictable",
+                              "long.unpredictable",
+                              "long.predictable")))
+
+conditions_means <- dat1 |> 
+  summarise(value=mean(rt), .by = condition) |> pivot_wider(names_from =condition) |> unlist()
+
+data.frame(
+  hypothesis = c("H0", "H1", "H2", "H3"),
+  Value = c(
+                                             conditions_means["short.unpredictable"],
+    conditions_means["short.predictable"]  - conditions_means["short.unpredictable"],
+    conditions_means["long.unpredictable"] - conditions_means["short.unpredictable"],
+    conditions_means["long.predictable"]   - conditions_means["short.unpredictable"]
+  )
+) |> gt()
+```
+
+```{r}
+coefficients(lm(rt ~ condition, data = dat1)) |> 
+  data.frame() |>
+  rownames_to_column() |> 
+  rename(Coef=1, Value=2) |> 
+  gt()
+```
+
+
+```{r}
+H <- rbind(
+  H0 = c(short.unpredictable = 1, short.predictable = 0, long.unpredictable = 0, long.predictable = 0),
+  H1 = c(short.unpredictable = 1, short.predictable = 1, long.unpredictable = 0, long.predictable = 0),
+  H2 = c(short.unpredictable = 1, short.predictable = 0, long.unpredictable = 1, long.predictable = 0),
+  H3 = c(short.unpredictable = 1, short.predictable = 0, long.unpredictable = 0, long.predictable = 1)
+)
+
+ginv2 <- function(x) { # define a function to make the output nicer
+  fractions(provideDimnames(ginv(x),
+    base = dimnames(x)[2:1]
+  ))
+}
+
+contrasts(dat1$condition) <- (ginv2(H))[,2:4]
+
+coefficients(lm(rt ~ condition, data = dat1)) |> 
+  data.frame() |>
+  rownames_to_column() |> 
+  rename(Coef=1, Value=2) |> 
+  gt()
+```
+
+```{r}
+H <- hypr(
+  H0 =                    ~ short.unpredictable,
+  H1 = short.predictable  ~ short.unpredictable,
+  H2 = long.unpredictable ~ short.unpredictable,
+  H3 = long.predictable   ~ short.unpredictable,
+  levels = c("short.unpredictable", 
+             "short.predictable",
+             "long.unpredictable",
+              "long.predictable")
+)
+
+contrasts(dat1$condition) <- contr.hypothesis(H)
+
+coefficients(lm(rt ~ condition, data = dat1)) |> 
+  data.frame() |>
+  rownames_to_column() |> 
+  rename(Coef=1, Value=2) |> 
+  gt()
+```
+## Exercise 8.2 Helmert coding for a four-condition design.
+
+Load the following data:
+
+```{r}
+head(df_polarity) |> gt()
+```
+The data come from an eyetracking study in German reported in Vasishth et al. (2008). The experiment is a reading study involving six conditions. The sentences are in English, but the original design was involved German sentences. In German, the word durchaus (certainly) is a positive polarity item: in the constructions used in this experiment, durchaus cannot have a c-commanding element that is a negative polarity item licensor. Here are the conditions:
+
+* Negative polarity items
+  a. Grammatical: No man who had a beard was ever thrifty.
+  b. Ungrammatical (Intrusive NPI licensor): A man who had no beard was ever thrifty.
+  c. Ungrammatical: A man who had a beard was ever thrifty.
+* Positive polarity items
+  d. Ungrammatical: No man who had a beard was certainly thrifty.
+  e. Grammatical (Intrusive NPI licensor): A man who had no beard was certainly thrifty.
+  f. Grammatical: A man who had a beard was certainly thrifty.
+  
+We will focus only on re-reading time in this data set. Subset the data so that we only have re-reading times in the data frame:
+
+```{r}
+dat2 <- subset(df_polarity, times == "RRT")
+
+head(dat2) |> gt()
+```
+
+The comparisons we are interested in are:
+ 
+* What is the difference in reading time between negative polarity items and positive polarity items?
+* Within negative polarity items, what is the difference between grammatical and ungrammatical conditions?
+* Within negative polarity items, what is the difference between the two ungrammatical conditions?
+* Within positive polarity items, what is the difference between grammatical and ungrammatical conditions?
+* Within positive polarity items, what is the difference between the two grammatical conditions?
+
+Use the `hypr` package to specify the comparisons specified above, and then extract the contrast matrix. Finally, specify the contrasts to the condition column in the data frame. Fit a linear model using this contrast specification, and then check that the estimates from the model match the mean differences between the conditions being compared.
+
+```{r}
+bind_rows(
+  dat2 |> group_by(condition=
+      case_match(condition,
+        c("a", "b", "c") ~ "negative",
+        c("d", "e", "f") ~ "positive"
+      )
+  ) |> summarise(mean=mean(value)),
+
+  dat2 |> filter(condition %in% c("a", "b", "c")) |> group_by(condition=
+      case_match(condition,
+        c("a") ~ "negative.grammatical",
+        c("b", "c") ~ "negative.ungrammatical"
+      )) |> summarise(mean=mean(value)),
+
+  dat2 |> filter(condition %in% c("b", "c")) |> group_by(condition=
+      case_match(condition,
+        c("b") ~ "negative.ungrammatical.1",
+        c("c") ~ "negative.ungrammatical.2"
+      )) |> summarise(mean=mean(value)),
+
+  dat2 |> filter(condition %in% c("d", "e", "f")) |> group_by(condition=
+      case_match(condition,
+        c("e", "f") ~ "positive.grammatical",
+        c("d") ~ "positive.ungrammatical"
+      )) |> summarise(mean=mean(value)),
+
+  dat2 |> filter(condition %in% c("e", "f")) |> group_by(condition=
+      case_match(condition,
+        c("e") ~ "positive.grammatical.1",
+        c("f") ~ "positive.grammatical.2"
+      )) |> summarise(mean=mean(value))
+
+) |> pivot_wider(names_from = condition, values_from = mean) |>
+  reframe(
+    hypothesis = c(
+      "negative - positive",
+      "negative.grammatical - negative.ungrammatical",
+      "negative.ungrammatical diff",
+      "positive.grammatical - positive.ungrammatical",
+      "positive.grammatical.1 - positive.grammatical.2"
+    ), value = c(
+      negative - positive,
+      negative.grammatical - negative.ungrammatical,
+      negative.ungrammatical.1 - negative.ungrammatical.2 ,
+      positive.grammatical - positive.ungrammatical,
+      positive.grammatical.1 - positive.grammatical.2
+    )
+  )
+```
+
+```{r}
+H = rbind(
+  "grand mean" = c(1/6,1/6,1/6,1/6,1/6,1/6),
+  "negative - positive" = c(1/3,1/3,1/3,-1/3,-1/3,-1/3),
+  "negative.grammatical - negative.ungrammatical" = c(1,-1/2,-1/2,0,0,0),
+  "negative.ungrammatical diff" = c(0,1,-1,0,0,0),
+  "positive.grammatical - positive.ungrammatical" = c(0,0,0,-1,1/2,1/2),
+  "positive.grammatical diff" = c(0,0,0,0,1,-1)
+)
+
+colnames(H) <- c("a","b","c","d","e","f")
+
+
+dat3 <- dat2
+contrasts(dat3$condition) <- (ginv2(H))[,2:5]
+
+coefficients(lm(value ~ condition, data = dat3)) |> 
+  data.frame() |>
+  rownames_to_column() |> 
+  rename(Coef=1, Value=2) |> 
+  gt()
+```
+
+```{r}
+H <- hypr(
+  "negative - positive" = (a + b + c)/3  ~ (d + e + f)/3,
+  "negative.grammatical - negative.ungrammatical" = a ~ (b + c)/2,
+  "negative.ungrammatical diff" = b ~ c,
+  "positive.grammatical - positive.ungrammatical" = (e + f)/2 ~ d,
+  "positive.grammatical diff" = e ~ f,
+  
+  levels = c("a", "b", "c", "d", "e", "f")
+)
+
+contrasts(dat3$condition) <- contr.hypothesis(H)
+
+coefficients(lm(value ~ condition, data = dat3)) |> 
+  data.frame() |>
+  rownames_to_column() |> 
+  rename(Coef=1, Value=2) |> 
+  gt()
+```
+## Exercise 8.3 Number of possible comparisons in a single model.
+
+How many comparisons can one make in a single model when there is a single factor with four levels? Why can we not code four comparisons in a single model?
+
+::: {style="color:blue"}
+You can make as many comparisons as the number of levels minus one. In this case, three comparisons. The fourth comparison will be a linear combination of the other three and will result in multicollinearity.
+:::
+
+How many comparisons can one code in a model where there are two factors, one with three levels and one with two levels?
+
+::: {style="color:blue"}
+This is equivalent to a factor with six levels (3x2). Therefore, five comparisons can be made.
+:::
+
+How about a model for a $2×2×3$ design?
+
+::: {style="color:blue"}
+$2×2×3 - 1 = 11$
+:::
+
+
+
+
+
+
+
