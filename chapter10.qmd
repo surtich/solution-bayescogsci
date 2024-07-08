@@ -1,0 +1,505 @@
+---
+title: "Exercises chapter 10"
+warning: false
+echo: false
+cache: true
+error: false
+render: html
+---
+
+```{r}
+library(latex2exp)
+library(tidyverse)
+library(ggplot2)
+library(brms)
+library(parallel)
+library(bcogsci)
+library(gt)
+library(patchwork)
+library(broom.mixed)
+library(bayesplot)
+library(MASS)
+library(hypr)
+library(rstan)
+library(extraDistr)
+
+options(mc.cores = parallel::detectCores())
+```
+
+## Exercise 10.1 A very simple model.
+
+In this exercise we revisit the model from 3.2.1. Assume the following:
+
+1. There is a true underlying time, $\mu$, that the subject needs to press the space bar.
+2. There is some noise in this process.
+3. The noise is normally distributed (this assumption is questionable given that response times are generally skewed; we fix this assumption later).
+
+That is the likelihood for each observation $n$ will be:
+
+$$
+t_n \sim \mathit{Normal}(\mu, \sigma)
+$$
+a. Decide on appropriate priors and fit this model in Stan. Data can be found in `df_spacebar`.
+
+```{stan, output.var = "model10.1.a", cache = TRUE}
+#| eval: true
+#| echo: true
+data {
+  int<lower=1> N;
+  vector[N] t;
+}
+parameters {
+  real mu;
+  real<lower = 0> sigma;
+}
+model {
+  // priors:
+  target += normal_lpdf(mu | 400, 10);
+  target += normal_lpdf(sigma | 100, 10) - normal_lccdf(0 | 100, 10);
+  // likelihood
+  target += normal_lpdf(t | mu, sigma);
+}
+```
+
+```{r}
+data10.1.a = list(
+  N = nrow(df_spacebar),
+  t = df_spacebar$t
+)
+
+if (file.exists("fits/fit10.1.a.rds")) {
+  fit10.1.a <- readRDS("fits/fit10.1.a.rds")
+} else {
+  fit10.1.a <- rstan::sampling(
+    model10.1.a, data=data10.1.a,
+    iter=1000,
+    chains=4,
+    seed=1
+  )
+  saveRDS(fit10.1.a, file = "fits/fit10.1.a.rds")
+}
+```
+
+```{r}
+tidy(fit10.1.a, conf.int = TRUE) |> gt() |> fmt_number(decimals = 2)
+```
+
+
+b. Change the likelihood to a log-normal distribution and change the priors. Fit the model in Stan.
+
+
+```{stan, output.var = "model10.1.b", cache = TRUE}
+#| eval: true
+#| echo: true
+data {
+  int<lower=1> N;
+  vector[N] t;
+}
+parameters {
+  real mu;
+  real<lower = 0> sigma;
+}
+model {
+  // priors:
+  target += normal_lpdf(mu | 6, 1.5);
+  target += normal_lpdf(sigma | 0, 1) - normal_lccdf(0 | 0, 1);
+  // likelihood
+  target += lognormal_lpdf(t | mu, sigma);
+}
+```
+
+```{r}
+data10.1.b = list(
+  N = nrow(df_spacebar),
+  t = df_spacebar$t
+)
+
+if (file.exists("fits/fit10.1.b.rds")) {
+  fit10.1.b <- readRDS("fits/fit10.1.b.rds")
+} else {
+  fit10.1.b <- rstan::sampling(
+    model10.1.b, data=data10.1.b,
+    iter=1000,
+    chains=4,
+    seed=1
+  )
+  saveRDS(fit10.1.b, file = "fits/fit10.1.b.rds")
+}
+```
+
+```{r}
+tidy(fit10.1.b, conf.int = TRUE) |> gt() |> fmt_number(decimals = 2)
+```
+```{r}
+quantile(exp(extract(fit10.1.b)$mu), c(.025,.5,.975)) |> t() |> data.frame(check.names = FALSE) |> gt() |> fmt_number(decimals = 2)
+```
+
+## Exercise 10.2 Incorrect Stan model.
+
+We want to fit both response times and accuracy with the same model. We simulate the data as follows:
+
+```{r}
+#| echo: true
+N <- 500
+df_sim <- tibble(
+  rt = rlnorm(N, mean = 6, sd = .5),
+  correct = rbern(N, prob = .85)
+)
+```
+
+We build the following model:
+
+```{verbatim, lang="stan"}
+data {
+  int<lower = 1> N;
+  vector[N] rt;
+  array[N] int correct;
+}
+parameters {
+  real<lower = 0> sigma;
+  real theta;
+}
+model {
+  target += normal_lpdf(mu | 0, 20);
+  target += lognormal_lpdf(sigma | 3, 1)
+  for(n in 1:N)
+    target += lognormal_lpdf(rt[n] | mu, sigma);
+    target += bernoulli_lpdf(correct[n] | theta);
+}
+```
+
+Why does this model not work?
+
+Try to make it run. (Hint: There are several problems.)
+
+
+```{stan, output.var = "model10.2", cache = TRUE}
+#| eval: true
+#| echo: true
+data {
+  int<lower = 1> N;
+  vector[N] rt;
+  array[N] int correct;
+}
+parameters {
+  real mu;
+  real<lower = 0> sigma;
+  real theta;
+}
+model {
+  target += normal_lpdf(mu | 0, 20);
+  target += lognormal_lpdf(sigma | 3, 1);
+  for(n in 1:N) {
+    target += lognormal_lpdf(rt[n] | mu, sigma);
+    target += bernoulli_lpmf(correct[n] | theta);
+  }
+}
+```
+
+
+```{r}
+data10.2 = list(
+  N = nrow(df_sim),
+  rt = df_sim$rt,
+  correct = df_sim$correct
+)
+
+if (file.exists("fits/fit10.2.rds")) {
+  fit10.2 <- readRDS("fits/fit10.2.rds")
+} else {
+  fit10.2 <- rstan::sampling(
+    model10.2, data=data10.2,
+    iter=1000,
+    chains=4,
+    seed=1
+  )
+  saveRDS(fit10.2, file = "fits/fit10.2.rds")
+}
+```
+```{r}
+tidy(fit10.2, conf.int = TRUE) |> gt() |> fmt_number(decimals = 2)
+```
+
+## Exercise 10.3 Using Stan documentation.
+
+Edit the simple example with Stan from section 10.2, and replace the normal distribution with a skew normal distribution. (Don’t forget to add a prior to the new parameter, and check the Stan documentation or a statistics textbook for more information about the distribution).
+
+Fit the following data:
+
+```{r}
+#| echo: true
+Y <- rnorm(1000, mean = 3, sd = 10)
+```
+
+```{stan, output.var = "model10.3", cache = TRUE}
+#| eval: true
+#| echo: true
+data {
+  int<lower = 1> N;  // Total number of trials
+  vector[N] y;  // Score in each trial
+}
+parameters {
+  real xi;
+  real<lower=0> omega;
+  real alpha;
+}
+model {
+  // Priors:
+  target += normal_lpdf(alpha | 0, 2);
+  target += normal_lpdf(xi | 0, 2);
+  target += lognormal_lpdf(omega | 0, 1);
+  // Likelihood:
+  for(i in 1:N)
+    target += skew_normal_lpdf(y[i] | xi, omega, alpha);
+}
+generated quantities {
+  array[N] real y_pred;
+  for(i in 1:N)
+    y_pred[i] = skew_normal_rng(xi, omega, alpha);
+}
+```
+
+
+```{r}
+data10.3 = list(
+  N = length(Y),
+  y = Y
+)
+
+if (file.exists("fits/fit10.3.rds")) {
+  fit10.3 <- readRDS("fits/fit10.3.rds")
+} else {
+  fit10.3 <- rstan::sampling(
+    model10.3, data=data10.3,
+    iter=2000,
+    chains=4,
+    seed=1
+  )
+  saveRDS(fit10.3, file = "fits/fit10.3.rds")
+}
+```
+
+```{r}
+tidy(fit10.3, conf.int = TRUE, pars=c("xi", "omega", "alpha")) |> gt() |> fmt_number(decimals = 2)
+```
+
+```{r}
+ppc_dens_overlay(Y, yrep = extract(fit10.3)$y_pred[1:50,])
+```
+
+
+## Exercise 10.4 The probit link function as an alternative to the logit function.
+
+The probit link function is the inverse of the CDF of the standard normal distribution ($Normal(0,1)$). Since the CDF of the standard normal is usually written using the Greek letter $\Phi$ (Phi), the probit function is written as its inverse, $\Phi^{-1}$ . Refit the model presented in 10.4.3 changing the logit link function for the probit link (that is transforming the regression to a constrained space using `Phi()` in Stan).
+
+You will probably see the following as the model runs; this is because the probit link is less numerically stable (i.e., under- and overflows) than the logit link in Stan. Don’t worry, it is good enough for this exercise.
+
+::: {.callout-caution appearance="simple" icon=false}
+Rejecting initial value:\
+Log probability evaluates to log(0), i.e. negative infinity.\
+Stan can't start sampling from this initial value.
+:::
+   
+a. Do the results of the coefficients $\alpha$ and $\beta$ change?
+b. Do the results in probability space change?
+
+
+
+```{stan, output.var = "model10.4", cache = TRUE}
+#| eval: true
+#| echo: true
+data {
+  int<lower = 1> N;
+  int<lower=0> K;   // number of predictors
+  matrix[N, K] X;   // model matrix
+  array[N] int correct;
+}
+parameters {
+  real alpha;
+  vector[K] beta;
+}
+model {
+  // priors including all constants
+  target += normal_lpdf(alpha | 0, 1.5);
+  target += normal_lpdf(beta | 0, .1);
+  target += bernoulli_lpmf(correct | Phi(alpha + X * beta));
+}
+```
+
+
+```{r}
+df_recall <- df_recall %>%
+  mutate(c_set_size = set_size - mean(set_size),
+         c_trial = trial - mean(trial))
+
+X <- model.matrix(~ 0 + c_set_size * c_trial, df_recall)
+
+data10.4 = list(
+  correct = df_recall$correct,
+    X = X,
+    K = ncol(X),
+    N = nrow(df_recall)
+)
+
+if (file.exists("fits/fit10.4.rds")) {
+  fit10.4 <- readRDS("fits/fit10.4.rds")
+} else {
+  fit10.4 <- rstan::sampling(
+    model10.4, data=data10.4,
+    iter=1000,
+    chains=4,
+    seed=1
+  )
+  saveRDS(fit10.4, file = "fits/fit10.4.rds")
+}
+```
+
+
+```{r}
+tidy(fit10.4, conf.int = TRUE, pars=c("alpha", "beta")) |> gt() |> fmt_number(decimals = 2)
+```
+
+## Exercise 10.5 Examining the position of the queued word on recall.
+
+Refit the model presented in section 10.4.3 and examine whether set size, trial effects, the position of the queued word (`tested` in the data set), and their interaction affect free recall. (Tip: You can do this exercise without changing the Stan code.).
+
+How does the accuracy change from position one to position two?
+
+```{stan, output.var = "model10.5", cache = TRUE}
+#| eval: true
+#| echo: true
+data {
+  int<lower = 1> N;
+  int<lower=0> K;   // number of predictors
+  matrix[N, K] X;   // model matrix
+  array[N] int correct;
+}
+parameters {
+  real alpha;
+  vector[K] beta;
+}
+model {
+  // priors including all constants
+  target += normal_lpdf(alpha | 0, 1.5);
+  target += normal_lpdf(beta | 0, .1);
+  target += bernoulli_logit_glm_lpmf(correct | X, alpha, beta);
+}
+generated quantities {
+  real change_acc = inv_logit(alpha + beta[3] * 2) - inv_logit(alpha + beta[3] * 1);
+}
+```
+
+```{r}
+X <- model.matrix(~ 0 + c_set_size * c_trial * tested, df_recall)
+
+data10.5 = list(
+  correct = df_recall$correct,
+    X = X,
+    K = ncol(X),
+    N = nrow(df_recall)
+)
+
+if (file.exists("fits/fit10.5.rds")) {
+  fit10.5 <- readRDS("fits/fit10.5.rds")
+} else {
+  fit10.5 <- rstan::sampling(
+    model10.5, data=data10.5,
+    iter=1000,
+    chains=4,
+    seed=1
+  )
+  saveRDS(fit10.5, file = "fits/fit10.5.rds")
+}
+```
+```{r}
+tidy(fit10.5, conf.int = TRUE, pars=c("alpha", "beta")) |>
+  add_column(term2 = c("Intercept", colnames(X)), .after=1) |>
+  dplyr::select(1, last_col(), everything(), -last_col()) |>
+  gt() |> fmt_number(decimals = 2)
+```
+```{r}
+quantile(extract(fit10.5)$change_ac, c(.025,.5,.975)) |> t() |> data.frame(check.names = FALSE) |> gt() |> fmt_number(decimals = 2)
+```
+
+
+
+## Exercise 10.6 The conjunction fallacy.
+
+Paolacci, Chandler, and Ipeirotis (2010) examined whether the results of some classic experiments differ between a university pool population and subjects recruited from Mechanical Turk. We’ll examine whether the results of the conjunction fallacy experiment (or Linda problem: Tversky and Kahneman 1983) are replicated for both groups.
+
+```{r}
+df_fallacy |> head() |> gt()
+```
+The conjunction fallacy shows that people often fail to regard a combination of events as less probable than a single event in the combination (Tversky and Kahneman 1983):
+
+*Linda is 31 years old, single, outspoken, and very bright. She majored in philosophy. As a student, she was deeply concerned with issues of discrimination and social justice, and also participated in anti-nuclear demonstrations.*
+
+*Which is more probable?*
+
+a. *Linda is a bank teller.*
+b. *Linda is a bank teller and is active in the feminist movement.*
+
+The majority of those asked chose option b even though it’s less probable ($\Pr(a \land b)\leq \Pr(b)$) . The data set is named `df_fallacy` and it indicates with `0` option "a" and with `1` option b. Fit a logistic regression in Stan and report:
+
+a. The estimated overall probability of answering (b) ignoring the group.
+b. The estimated overall probability of answering (b) for each group.
+
+
+```{stan, output.var = "model10.6", cache = TRUE}
+#| eval: true
+#| echo: true
+data {
+  int<lower = 1> N;
+  array[N] int answer;
+  array[N] int source;
+}
+parameters {
+  real alpha;
+  real beta;
+}
+model {
+  // priors including all constants
+  target += normal_lpdf(alpha | 0, 1.5);
+  target += normal_lpdf(beta | 0, .1);
+  for (n in 1:N)
+    target += bernoulli_lpmf(answer | inv_logit(alpha + beta * source[n]));
+}
+```
+
+```{r}
+dat1 <- na.omit(df_fallacy)
+
+data10.6 = list(
+    N = nrow(dat1),
+    answer = dat1$answer,
+    source = ifelse(dat1$source=="mturk", 0, 1)
+)
+
+if (file.exists("fits/fit10.6.rds")) {
+  fit10.6 <- readRDS("fits/fit10.6.rds")
+} else {
+  fit10.6 <- rstan::sampling(
+    model10.6, data=data10.6,
+    iter=2000,
+    chains=4,
+    seed=1
+  )
+  saveRDS(fit10.6, file = "fits/fit10.6.rds")
+}
+```
+
+```{r}
+data.frame(
+  mturk=plogis(extract(fit10.6)$alpha),
+  university=plogis(extract(fit10.6)$alpha+extract(fit10.6)$beta)
+) |> 
+  mutate(diff = mturk-university) |>
+  map_df(~ quantile(.x, c(.025,.5,.975)), .id="source") |> 
+  gt() |> 
+  fmt_number(decimals = 2)
+```
+
+
+
+
+
